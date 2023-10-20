@@ -1,7 +1,13 @@
 import React from 'react';
 
 const Home = () => {
-  return <div>Home</div>;
+  return (
+    <section className='flex-start flex-col paddings mb-16'>
+      <h2>Categories</h2>
+      <h2>Posts</h2>
+      <h2>LoadMore</h2>
+    </section>
+  );
 };
 
 export default Home;
