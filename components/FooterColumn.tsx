@@ -1,11 +1,18 @@
-import React from 'react';
+import Link from 'next/link';
 
-const FooterColumn = () => {
+import { ColumnProps } from '@/types';
+
+const FooterColumn = ({ title, links }: ColumnProps) => {
   return (
     <div className='footer_column'>
-      <h4 className='font-semibold'>
-        <ul className='flex flex-col gap-2 font-normal'>Links</ul>
-      </h4>
+      <h4 className='font-semibold'>{title}</h4>
+      <ul className='flex flex-col gap-2 font-normal'>
+        {links.map(link => (
+          <Link href='/' key={link}>
+            {link}
+          </Link>
+        ))}
+      </ul>
     </div>
   );
 };
