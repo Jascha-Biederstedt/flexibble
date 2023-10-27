@@ -1,9 +1,10 @@
-import NextAuth from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+import { NextAuthOptions, User } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
 import prisma from '@/app/db';
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -12,13 +13,13 @@ const handler = NextAuth({
   ],
   callbacks: {
     async session({ session }) {
-      const sessionUser = await prisma.user.findUnique({
-        where: {
-          email: session?.user?.email as string,
-        },
-      });
+      // const sessionUser = await prisma.user.findUnique({
+      //   where: {
+      //     email: session?.user?.email as string,
+      //   },
+      // });
 
-      session.user?.id = sessionUser.id.toString();
+      // session?.user?.id = sessionUser.id.toString();
 
       return session;
     },
@@ -33,9 +34,9 @@ const handler = NextAuth({
         if (!userExists) {
           await prisma.user.create({
             data: {
-              email: user?.email,
-              name: user?.name?.replace(' ', '').toLowerCase(),
-              avatarUrl: user?.image,
+              email: user?.email as string,
+              name: user?.name?.replace(' ', '').toLowerCase() as string,
+              avatarUrl: user?.image as string,
             },
           });
         }
@@ -46,6 +47,4 @@ const handler = NextAuth({
       }
     },
   },
-});
-
-export { handler as GET, handler as POST };
+};
