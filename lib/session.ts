@@ -1,8 +1,28 @@
 import { getServerSession } from 'next-auth/next';
-import { NextAuthOptions, User } from 'next-auth';
+import { NextAuthOptions, Session, User } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { AdapterUser } from 'next-auth/adapters';
 
 import prisma from '@/app/db';
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string;
+  description: string | null;
+  githubUrl: string | null;
+  linkedInUrl: string | null;
+}
+
+interface SessionInterface extends Session {
+  user: User & {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string;
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,19 +31,33 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session }) {
-      // const sessionUser = await prisma.user.findUnique({
-      //   where: {
-      //     email: session?.user?.email as string,
-      //   },
-      // });
+      const email = session?.user?.email as string;
 
-      // session?.user?.id = sessionUser.id.toString();
+      try {
+        const data = (await prisma.user.findUnique({
+          where: {
+            email: session?.user?.email as string,
+          },
+        })) as { user?: UserProfile };
 
-      return session;
+        const newSession = {
+          ...session,
+          user: {
+            ...session.user,
+            ...data?.user,
+          },
+        };
+
+        return newSession;
+      } catch (error: any) {
+        console.error('Error retrieving user data: ', error.message);
+        return session;
+      }
     },
-    async signIn({ user }) {
+    async signIn({ user }: { user: AdapterUser | User }) {
       try {
         const userExists = await prisma.user.findUnique({
           where: {
@@ -48,3 +82,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+export async function getCurrentUser() {
+  const session = (await getServerSession(authOptions)) as SessionInterface;
+
+  return session;
+}
