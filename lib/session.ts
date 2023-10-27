@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 
 import prisma from '@/app/db';
 
@@ -11,33 +10,32 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  adapter: PrismaAdapter(prisma),
   callbacks: {
     async session({ session }) {
       const sessionUser = await prisma.user.findUnique({
         where: {
-          email: session?.user?.email,
+          email: session?.user?.email as string,
         },
       });
 
-      session.user.id = sessionUser?.id.toString();
+      session.user?.id = sessionUser.id.toString();
 
       return session;
     },
-    async signIn({ profile }) {
+    async signIn({ user }) {
       try {
         const userExists = await prisma.user.findUnique({
           where: {
-            email: profile?.email,
+            email: user?.email as string,
           },
         });
 
         if (!userExists) {
           await prisma.user.create({
             data: {
-              email: profile?.email,
-              name: profile?.name?.replace(' ', '').toLowerCase(),
-              image: profile?.picture,
+              email: user?.email,
+              name: user?.name?.replace(' ', '').toLowerCase(),
+              avatarUrl: user?.image,
             },
           });
         }
