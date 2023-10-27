@@ -1,6 +1,5 @@
 'use client';
 
-import { get } from 'http';
 import { getProviders, signIn } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 
